@@ -1,0 +1,12 @@
+name: alternativa
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python =3.10
+  - pip
+  - black
+  - isort
+  - pip:
+    - -r requirements.txt
