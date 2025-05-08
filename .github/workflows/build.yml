@@ -1,0 +1,73 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash -el {0}
+
+jobs:
+  linux-64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          init-shell: >-
+            bash
+          cache-environment: true
+          post-cleanup: 'all'
+
+      - name: Create binary packages
+        run: bash .ci-helpers/build.sh
+
+      - name: Zip folder
+        run: |
+          cd dist
+          zip -r scrape-linux-64.zip scrape
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: assets
+          path: dist/*.zip
+          if-no-files-found: error
+
+  release:
+    needs: [linux-64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: 'latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: assets
+          path: assets
+
+      - uses: ncipollo/release-action@v1
+        with:
+          name: 'continuous build'
+          tag: 'latest'
+          commit: 'main'
+          makeLatest: true
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: 'assets/*.zip'
+          body: 'Binaries are up-to-date with the `main` branch.'
