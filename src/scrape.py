@@ -3,19 +3,40 @@ import json
 
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
+
+
+def get_total_pages(base_url):
+    response = requests.get(f"{base_url}?pagina=1")
+    if response.status_code != 200:
+        raise Exception(f"Error fetching initial page: {response.status_code}")
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    pagination_links = soup.select("ul.pagination li.page-item a")
+
+    page_numbers = []
+    for link in pagination_links:
+        href = link.get("href", "")
+        if "pagina=" in href:
+            try:
+                page_number = int(href.split("pagina=")[1])
+                page_numbers.append(page_number)
+            except ValueError:
+                continue
+
+    return max(page_numbers) if page_numbers else 1
 
 
 def get_reviews(base_url, output_file):
-    page = 1
     total_reviews = 0
+    total_pages = get_total_pages(base_url)
 
     with open(output_file, "w", encoding="utf-8") as file:
-        while True:
-            print(f"Processing page {page}...")
+        for page in tqdm(range(1, total_pages + 1), desc="Scraping pages"):
             response = requests.get(f"{base_url}?pagina={page}")
 
             if response.status_code != 200:
-                print(f"Error requesting page {page}: {response.status_code}")
+                print(f"\nError requesting page {page}: {response.status_code}")
                 break
 
             soup = BeautifulSoup(response.text, "html.parser")
@@ -53,10 +74,8 @@ def get_reviews(base_url, output_file):
                 file.write(json.dumps(review_data, ensure_ascii=False) + "\n")
                 total_reviews += 1
 
-            page += 1
-
     print(
-        f"Scraping completed: {page - 1} pages processed, {total_reviews} reviews extracted."
+        f"\nScraping completed: {total_pages} pages processed, {total_reviews} reviews extracted."
     )
 
 
