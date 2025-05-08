@@ -2,7 +2,7 @@
 Scraping del sitio web de Alternativa Teatral
 
 ## Instalación
-El script requiere solamente los paquetes `requests` y `beautifulsoup4`. Se recomienda instalar en un environment de Conda:
+Las dependencias del script están listadas en el archivo `requirements.txt`. Se recomienda instalar utilizando un environment de Conda:
 
 ```bash
 $ conda env create -f environment.yml
