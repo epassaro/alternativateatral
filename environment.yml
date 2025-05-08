@@ -8,5 +8,6 @@ dependencies:
   - pip
   - black
   - isort
+  - pyinstaller
   - pip:
     - -r requirements.txt
