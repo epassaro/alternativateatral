@@ -3,7 +3,7 @@ import asyncio
 import json
 import random
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, TCPConnector
 from bs4 import BeautifulSoup
 from tqdm.asyncio import tqdm
 
@@ -95,7 +95,7 @@ async def scrape_page(base_url, page, session):
 
 
 async def get_reviews(base_url, output_file):
-    async with ClientSession() as session:
+    async with ClientSession(connector=TCPConnector(ssl=False)) as session:
         total_pages = await get_total_pages(base_url, session)
 
         tasks = [
